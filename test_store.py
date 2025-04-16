@@ -82,7 +82,7 @@ def test_get_all_products(sample_store):
     assert len(active_products) == 2
 
 
-def test_oder(sample_store):
+def test_order(sample_store):
     """Test ordering products from the store"""
     # Buy 2 MacBooks and 1 Bose Earbuds
     shopping_list = [
