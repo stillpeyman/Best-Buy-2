@@ -1,5 +1,5 @@
 import pytest
-from products import Product
+from products import Product, NonStockedProduct, LimitedProduct
 
 
 def test_product_initialization():
@@ -80,3 +80,66 @@ def test_activation():
 
     p.activate()
     assert p.get_status() is True
+
+
+# Test NonStockedProduct
+def test_non_stocked_product_init():
+    p = NonStockedProduct("Windows License", price=100.00)
+    assert p.name == "Windows License"
+    assert p.price == 100.00
+    assert p.quantity == 0
+    assert p.is_active is True
+
+    p_inactive = NonStockedProduct("Windows License", price=100.00, is_active=False)
+    assert p_inactive.is_active is False
+
+
+def test_non_stocked_product_buy():
+    p = NonStockedProduct("Windows License", price=100)
+    assert p.buy(1) == 100
+    assert p.buy(3) == 300
+    assert p.get_quantity() == 0
+
+    with pytest.raises(Exception):
+        # Purchase quantity must be int
+        p.buy("20")
+
+    with pytest.raises(Exception):
+        # Invalid quantity
+        p.buy(-1)
+
+    with pytest.raises(Exception):
+        p_inactive = NonStockedProduct("Windows License", price=100.00, is_active=False)
+        # Trying to buy unavailable product
+        p_inactive.buy(1)
+
+
+def test_limited_product_init():
+    p = LimitedProduct("Shipping", price=10, quantity=250, max_quantity=1)
+    assert p.name == "Shipping"
+    assert p.price == 10.00
+    assert p.quantity == 250
+    assert p.max_quantity == 1
+    assert p.is_active is True
+
+
+def test_limited_product_buy():
+    p = LimitedProduct("Shipping", price=10, quantity=250, max_quantity=1)
+
+    assert p.buy(1) == 10
+    assert p.quantity == 249
+
+    with pytest.raises(Exception):
+        # Invalid quantity
+        p.buy(5)
+
+    with pytest.raises(Exception):
+        # Purchase quantity must be int
+        p.buy("5")
+
+    with pytest.raises(Exception):
+        # Invalid quantity
+        p.buy(-1)
+
+
+
