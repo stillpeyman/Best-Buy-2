@@ -1,6 +1,7 @@
 import textwrap
 import products
 import store
+from products import NonStockedProduct, LimitedProduct
 
 
 def exit_store():
@@ -35,24 +36,37 @@ def make_order(store_instance):
             product = store_inventory[product_index]
 
             while True:
-                amount = input("Enter the amount you want: ").strip()
+                quantity_to_buy = input("Enter the quantity you want: ").strip()
 
                 if user_order == "":
                     break
 
-                if not amount.isdigit():
-                    print("Please enter a valid number for the amount.")
+                if not quantity_to_buy.isdigit():
+                    print("Please enter a valid number for the quantity.")
                     continue
 
-                amount = int(amount)
-                if amount <= 0 or amount > product.quantity:
-                    print(f"Please enter an amount between 1 and {product.quantity}.")
+                quantity_to_buy = int(quantity_to_buy)
+
+                if isinstance(product, NonStockedProduct):
+                    break
+
+                if isinstance(product, LimitedProduct):
+                    if quantity_to_buy > product.max_quantity:
+                        print(f"The maximum quantity you can buy is {product.max_quantity}.")
+                        continue
+                    else:
+                        break
+
+                if quantity_to_buy <= 0 or quantity_to_buy > product.quantity:
+                    print(f"Please enter an quantity between 1 and {product.quantity}.")
                     continue
 
                 else:
                     break
 
-            shopping_list.append((product, amount))
+            shopping_list.append((product, quantity_to_buy))
+            print(f"Your current total is {store_instance.order(shopping_list)}")
+            list_all_products(store_instance)
 
         except ValueError:
             print("Invalid input. Please enter a number.")
@@ -118,7 +132,9 @@ def main():
     # setup initial stock of inventory
     product_list = [products.Product("MacBook Air M2", price=1450, quantity=100),
                     products.Product("Bose QuietComfort Earbuds", price=250, quantity=500),
-                    products.Product("Google Pixel 7", price=500, quantity=250)
+                    products.Product("Google Pixel 7", price=500, quantity=250),
+                    products.NonStockedProduct("Windows License", price=125),
+                    products.LimitedProduct("Shipping", price=10, quantity=250, max_quantity=1)
                     ]
 
     # create Store instance
