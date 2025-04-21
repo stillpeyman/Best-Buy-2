@@ -29,7 +29,7 @@ class Product:
                     raise Exception("Only instance of Promotion can be used.")
 
         self.name = name
-        self.price = float(price)
+        self._price = float(price)
         self._quantity = quantity
         self._is_active = is_active
         self._promotions = promotions if promotions is not None else []
@@ -37,26 +37,11 @@ class Product:
 
     @property
     def price(self):
-        """
-        Getter function for product price.
-
-        Returns:
-            float: The price of the product.
-        """
         return self._price
 
 
     @price.setter
     def price(self, value):
-        """
-        Setter for product price.
-
-        Args:
-            value (float): The new price of the product.
-
-        Raises:
-            Exception: If the price is not a positive number.
-        """
         if not isinstance(value, (int, float)) or value <= 0:
             raise Exception("Error, price must be float and greater than 0!")
         self._price = float(value)
@@ -301,4 +286,98 @@ class LimitedProduct(Product):
         return super().__str__() + f" (Max per order: {self._max_quantity})"
 
 
+class Store:
+
+    def __init__(self, product_list):
+        """
+        Get a list of products and initializes the store.
+        """
+        if not isinstance(product_list, list) or not product_list:
+            raise Exception("product_list must be a non-empty list!")
+        self.product_list = product_list
+
+
+    def add_product(self, product: Product):
+        """
+        Add a product to the store provided product is class Product.
+        """
+        if not isinstance(product, Product):
+            raise Exception("Only instances of Product can be added!")
+        self.product_list.append(product)
+
+
+    def remove_product(self, product: Product):
+        """
+        Remove a product (Product class) from store.
+        """
+        if product in self.product_list:
+            self.product_list.remove(product)
+        else:
+            raise Exception("Product not found in store!")
+
+
+    def get_total_quantity(self):
+        """
+        Return how many items are in the store in total.
+        """
+        return sum(product.quantity for product in self.product_list)
+
+
+    def get_all_products(self):
+        """
+        Return a list of all products in the store that are active.
+        """
+        return [str(product) for product in self.product_list if product.is_active]
+
+
+    def order(self, shopping_list):
+        """
+        Get a list of tuples, each tuple has 2 items (product: Product, quantity),
+        buys the product and returns total price of the order.
+        """
+        total_price = 0.0
+        for product, quantity in shopping_list:
+            total_price += product.buy(quantity)
+        return total_price
+
+
+    def __contains__(self, product):
+        """
+        Check if a product is in the store.
+
+        Args:
+            product (Product): The product to check.
+
+        Returns:
+            bool: True if the product is in the store, False otherwise.
+        """
+        if not isinstance(product, Product):
+            raise False
+
+        return product in self.product_list
+
+
+    def __add__(self, other):
+        if not isinstance(other, Store):
+            raise Exception(f"{other} must be Store instance.")
+        combined_products = self.product_list + other.product_list
+        return Store(combined_products)
+
+
+# setup initial stock of inventory
+mac =  Product("MacBook Air M2", price=1450, quantity=100)
+bose = Product("Bose QuietComfort Earbuds", price=250, quantity=500)
+pixel = LimitedProduct("Google Pixel 7", price=500, quantity=250, max_quantity=1)
+
+best_buy = Store([mac, bose])
+
+try:
+    mac.price = -100         # Should give error
+except Exception as e:
+    print(e)
+
+print(mac)               # Should print `MacBook Air M2, Price: $1450 Quantity:100`
+print(mac > bose)        # Should print True
+print(mac in best_buy)   # Should print True
+print(pixel in best_buy) # Should print False
 

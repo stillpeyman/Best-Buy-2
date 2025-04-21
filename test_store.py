@@ -19,23 +19,20 @@ def sample_store():
 
 
 def test_store_init(sample_store):
-    """Test store init with valid product list"""
     # Store should have 3 products
     assert len(sample_store.product_list) == 3
 
 
-def test_invalid_init():
+@pytest.mark.parametrize("invalid_products_list", [
+    [],
+    ("MacBook Air M2", 1450, 100)
+])
+def test_invalid_init(invalid_products_list):
     with pytest.raises(Exception):
-        # Empty list should raise an exception
-        Store([])
-
-    with pytest.raises(Exception):
-        # Tuple instead of list should raise an exception
-        Store(("MacBook Air M2", 1450, 100))
+        Store(invalid_products_list)
 
 
 def test_add_product(sample_store):
-    """Test adding a new product"""
     new_product = Product("Sony Alpha 7", price=1700, quantity=10)
     sample_store.add_product(new_product)
 
@@ -45,19 +42,23 @@ def test_add_product(sample_store):
     assert len(sample_store.product_list) == 4
 
 
-def test_add_invalid_product(sample_store):
-    """Test adding invalid product (not a Product instance)"""
+@pytest.mark.parametrize("invalid_product", [
+    "Not a Product object",
+    123,
+    None,
+    [Product("Test", 1, 1)]
+])
+def test_add_invalid_product(sample_store, invalid_product):
     with pytest.raises(Exception):
-        # Should raise an exception
-        sample_store.add_product("Not a product object")
+        sample_store.add_product(invalid_product)
 
 
-def test_remove_product(sample_store):
-    """Test removing a product that is not in the store"""
-    fake_product = Product("Nonexistent item", price=100, quantity=10)
-
+@pytest.mark.parametrize("fake_product", [
+    Product("Nonexistent item", price=100, quantity=10),
+    Product("Fake product", price=50, quantity=1)
+])
+def test_remove_product(sample_store, fake_product):
     with pytest.raises(Exception):
-        # Should raise an exception
         sample_store.remove_product(fake_product)
 
 
@@ -95,23 +96,70 @@ def test_order(sample_store):
     # Should be a total of 3150
     assert total_cost == (2 * 1450) + (1* 250)
     # Product quantity should be 98 (100 - 2)
-    assert sample_store.product_list[0].get_quantity() == 98
+    assert sample_store.product_list[0].quantity == 98
     # Product quantity should be 499 (500 - 1)
-    assert sample_store.product_list[1].get_quantity() == 499
+    assert sample_store.product_list[1].quantity == 499
 
 
-def test_invalid_order(sample_store):
-    """Test ordering out-of-stock product or more than available"""
-    out_of_stock_product = Product("Out of Stock Item", price=100, quantity=0, is_active=False)
-    sample_store.add_product(out_of_stock_product)
-    shopping_list1 = [(out_of_stock_product, 1)]
+@pytest.mark.parametrize("shopping_list", [
+    [(Product("Out of Stock Item", price=100, quantity=0,
+              is_active=False), 1)],
+    [(Product("MacBook Air M2", price=1450, quantity=2), 5)]
+])
+def test_invalid_order(sample_store, shopping_list):
+    """
+    Test invalid orders (out-of-stock or invalid quantity).
+    """
+    # Add out-of-stock product to the store if needed
+    # unpack tuples in shopping list, only check for product (not quantity!)
+    for product, _ in shopping_list:
+        if product in sample_store.product_list:
+            sample_store.add_product(product)
 
-    shopping_list2 = [(sample_store.product_list[0], 102)]
-
-    # out-of-stock product
     with pytest.raises(Exception):
-        sample_store.order(shopping_list1)
+        sample_store.order(shopping_list)
 
-    # not enough stock
+
+def test_contains(sample_store):
+    """
+    Test membership of a product in sample_store product list.
+    """
+    macbook = sample_store.product_list[0]
+    earbuds = sample_store.product_list[1]
+
+    assert macbook in sample_store
+    assert earbuds in sample_store
+
+    p = Product("Sony Headphones", price=100, quantity=100)
+    assert p not in sample_store
+
+
+def test_add_stores(sample_store):
+    """
+    Test combining two stores.
+    """
+    p = Product("Sony Headphones", price=100, quantity=100)
+    other_store = Store([p])
+
+    combined_store = sample_store + other_store
+
+    assert isinstance(combined_store, Store)
+    assert len(combined_store.product_list) == 4
+    assert p in combined_store
+
+    for product in sample_store.product_list:
+        assert product in combined_store
+
+
+@pytest.mark.parametrize("invalid_store", [
+    "Not a Store object",
+    123,
+    None,
+    [Store([Product("Test", 1, 1)])]
+])
+def test_add_invalid_store(sample_store, invalid_store):
+    """
+    Test combining invalid store with sample_store.
+    """
     with pytest.raises(Exception):
-        sample_store.order(shopping_list2)
+        sample_store + invalid_store
