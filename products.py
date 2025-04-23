@@ -86,6 +86,26 @@ class Product:
             self._is_active = False
 
 
+    def update_quantity(self, quantity):
+        """
+        Update the quantity after a purchase.
+        Deactivate the product if the quantity reaches zero.
+
+        Args:
+            quantity (int): The quantity to reduce from the stock.
+        """
+        if not isinstance(quantity, int) or quantity < 0:
+            raise Exception("Error, quantity must be a positive integer!")
+
+        if quantity > self._quantity:
+            raise Exception("Not enough stock to update quantity.")
+
+        self._quantity -= quantity
+
+        if self._quantity == 0:
+            self._is_active = False
+
+
     @property
     def is_active(self):
         """
@@ -115,13 +135,43 @@ class Product:
 
 
     def add_promo(self, promotion):
-        if isinstance(promotion, Promotion):
+        """
+        Adds one or more promotions to the product's promotion list.
+
+        If a single promotion is passed, it is added to the list if not already present.
+        If a list of promotions is passed, each promotion is checked and added individually
+        if not already in the list.
+
+        Args:
+            promotion (Promotion or list): A single Promotion object or a list of Promotion objects
+        """
+        if isinstance(promotion, list):
+            for promo in promotion:
+                if isinstance(promo, Promotion) and promo not in self._promotions:
+                    self._promotions.append(promo)
+
+        elif isinstance(promotion, Promotion):
             if promotion not in self._promotions:
                 self._promotions.append(promotion)
 
 
     def remove_promo(self, promotion):
-        if isinstance(promotion, Promotion):
+        """
+        Removes one or more promotions from the product's promotion list.
+
+        If a single promotion is passed, it is removed from the list if it exists.
+        If a list of promotions is passed, each promotion is checked and removed individually
+        if it exists in the list.
+
+        Args:
+            promotion (Promotion or list): A single Promotion object or a list of Promotion objects
+        """
+        if isinstance(promotion, list):
+            for promo in promotion:
+                if isinstance(promo, Promotion) and promo in self._promotions:
+                    self._promotions.remove(promo)
+
+        elif isinstance(promotion, Promotion):
             if promotion in self._promotions:
                 self._promotions.remove(promotion)
 
@@ -146,12 +196,23 @@ class Product:
         self._promotions = promotions
 
 
+    def promo_text(self):
+        """
+        Return a string that shows the promo available.
+        Return empty string if no promo.
+        """
+        if self._promotions:
+            return f" | PROMOTIONS: {', '.join([str(promo) for promo in self._promotions])}"
+        else:
+            return ""
+
+
     def __str__(self):
         """
         Return a string that represents the product.
         """
         if self._promotions:
-            promo_text = f" | Promotions: {', '.join([str(promo) for promo in self._promotions])}"
+            promo_text = f" | PROMOTIONS: {', '.join([str(promo) for promo in self._promotions])}"
         else:
             promo_text = ""
 
@@ -181,11 +242,34 @@ class Product:
                 [promo.apply_promotion(self, quantity) for promo in self._promotions],
                 default=total_price
             )
+
+            self.update_quantity(quantity)
             return round(best_price, 2)
 
-        self._quantity -= quantity
-        if self._quantity == 0:
-            self._is_active = False
+        self.update_quantity(quantity)
+        return total_price
+
+
+    def calculate_price(self, quantity):
+        """
+        Calculate total price for a given quantity, applying promotions if available,
+        without actually buying the product or modifying its quantity.
+        """
+        if not isinstance(quantity, int) or quantity <= 0:
+            raise Exception("Error, quantity must be integer and greater than 0!")
+
+        if not self._is_active:
+            raise Exception("Error, product is unavailable at the moment!")
+
+        total_price = self.price * quantity
+
+        # Apply promo(s) if available, get <best_price> if multiple promos
+        if self._promotions:
+            best_price = min(
+                [promo.apply_promotion(self, quantity) for promo in self._promotions],
+                default=total_price
+            )
+            return round(best_price, 2)
 
         return total_price
 
@@ -265,7 +349,12 @@ class NonStockedProduct(Product):
         """
         Override <show> to display that it is a non-stocked product.
         """
-        return super().__str__() + " (This is a non-stocked product!)"
+        if self._promotions:
+            promo_text = f" | PROMOTIONS: {', '.join([str(promo) for promo in self._promotions])}"
+        else:
+            promo_text = ""
+
+        return f"{self.name}, Price: {self.price}{promo_text}"
 
 
 class LimitedProduct(Product):

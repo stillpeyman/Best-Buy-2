@@ -1,3 +1,5 @@
+import promotions
+
 from promotions import Promotion
 
 
@@ -29,7 +31,7 @@ class Product:
                     raise Exception("Only instance of Promotion can be used.")
 
         self.name = name
-        self._price = float(price)
+        self.price = float(price)
         self._quantity = quantity
         self._is_active = is_active
         self._promotions = promotions if promotions is not None else []
@@ -37,11 +39,26 @@ class Product:
 
     @property
     def price(self):
+        """
+        Getter function for product price.
+
+        Returns:
+            float: The price of the product.
+        """
         return self._price
 
 
     @price.setter
     def price(self, value):
+        """
+        Setter for product price.
+
+        Args:
+            value (float): The new price of the product.
+
+        Raises:
+            Exception: If the price is not a positive number.
+        """
         if not isinstance(value, (int, float)) or value <= 0:
             raise Exception("Error, price must be float and greater than 0!")
         self._price = float(value)
@@ -67,6 +84,19 @@ class Product:
 
         self._quantity = quantity
 
+        if self._quantity == 0:
+            self._is_active = False
+
+
+    def update_quantity(self, quantity):
+        """
+        Updates the quantity after a purchase.
+        Deactivates the product if the quantity reaches zero.
+
+        Args:
+            quantity (int): The quantity to reduce from the stock.
+        """
+        self._quantity -= quantity
         if self._quantity == 0:
             self._is_active = False
 
@@ -100,13 +130,43 @@ class Product:
 
 
     def add_promo(self, promotion):
-        if isinstance(promotion, Promotion):
+        """
+        Adds one or more promotions to the product's promotion list.
+
+        If a single promotion is passed, it is added to the list if not already present.
+        If a list of promotions is passed, each promotion is checked and added individually
+        if not already in the list.
+
+        Args:
+            promotion (Promotion or list): A single Promotion object or a list of Promotion objects
+        """
+        if isinstance(promotion, list):
+            for promo in promotion:
+                if isinstance(promo, Promotion) and promo not in self._promotions:
+                    self._promotions.append(promo)
+
+        elif isinstance(promotion, Promotion):
             if promotion not in self._promotions:
                 self._promotions.append(promotion)
 
 
     def remove_promo(self, promotion):
-        if isinstance(promotion, Promotion):
+        """
+        Removes one or more promotions from the product's promotion list.
+
+        If a single promotion is passed, it is removed from the list if it exists.
+        If a list of promotions is passed, each promotion is checked and removed individually
+        if it exists in the list.
+
+        Args:
+            promotion (Promotion or list): A single Promotion object or a list of Promotion objects
+        """
+        if isinstance(promotion, list):
+            for promo in promotion:
+                if isinstance(promo, Promotion) and promo in self._promotions:
+                    self._promotions.remove(promo)
+
+        elif isinstance(promotion, Promotion):
             if promotion in self._promotions:
                 self._promotions.remove(promotion)
 
@@ -136,7 +196,7 @@ class Product:
         Return a string that represents the product.
         """
         if self._promotions:
-            promo_text = f" | Promotions: {', '.join([str(promo) for promo in self._promotions])}"
+            promo_text = f" | PROMOTIONS: {', '.join([str(promo) for promo in self._promotions])}"
         else:
             promo_text = ""
 
@@ -166,12 +226,11 @@ class Product:
                 [promo.apply_promotion(self, quantity) for promo in self._promotions],
                 default=total_price
             )
+
+            self.update_quantity(quantity)
             return round(best_price, 2)
 
-        self._quantity -= quantity
-        if self._quantity == 0:
-            self._is_active = False
-
+        self.update_quantity(quantity)
         return total_price
 
 
@@ -330,6 +389,13 @@ class Store:
         return [str(product) for product in self.product_list if product.is_active]
 
 
+    def get_active_products(self):
+        """
+        Return actual active
+        """
+        return [product for product in self.product_list if product.is_active]
+
+
     def order(self, shopping_list):
         """
         Get a list of tuples, each tuple has 2 items (product: Product, quantity),
@@ -337,7 +403,7 @@ class Store:
         """
         total_price = 0.0
         for product, quantity in shopping_list:
-            total_price += product.buy(quantity)
+            total_price += product.price * quantity
         return total_price
 
 
@@ -362,6 +428,33 @@ class Store:
             raise Exception(f"{other} must be Store instance.")
         combined_products = self.product_list + other.product_list
         return Store(combined_products)
+
+
+# setup initial stock of inventory
+product_list = [ Product("MacBook Air M2", price=1450, quantity=100),
+                 Product("Bose QuietComfort Earbuds", price=250, quantity=500),
+                 Product("Google Pixel 7", price=500, quantity=250),
+                 NonStockedProduct("Windows License", price=125),
+                 LimitedProduct("Shipping", price=10, quantity=250, max_quantity=1)
+               ]
+
+# Create promotion catalog
+second_half_price = promotions.SecondHalfPrice("Second Half price!")
+third_one_free = promotions.ThirdOneFree("Third One Free!")
+thirty_percent = promotions.PercentDiscount("30% off!", percent=30)
+
+# Add promotions to products
+product_list[0].add_promo([second_half_price, third_one_free, thirty_percent])
+product_list[1].add_promo(third_one_free)
+product_list[3].add_promo(thirty_percent)
+
+print(str(product_list[0]))
+print(product_list[0].buy(10))
+print(str(product_list[0]))
+print()
+print(str(product_list[3]))
+print(product_list[3].buy(5))
+print(str(product_list[3]))
 
 
 # setup initial stock of inventory

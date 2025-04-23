@@ -40,9 +40,16 @@ class Store:
 
     def get_all_products(self):
         """
-        Return a list of all products in the store that are active.
+        Return a list of all active products in the store as strings.
         """
         return [str(product) for product in self.product_list if product.is_active]
+
+
+    def get_active_products(self):
+        """
+        Return list of active products in the store as objects.
+        """
+        return [product for product in self.product_list if product.is_active]
 
 
     def order(self, shopping_list):
@@ -53,6 +60,13 @@ class Store:
         total_price = 0.0
         for product, quantity in shopping_list:
             total_price += product.buy(quantity)
+        return total_price
+
+
+    def calculate_subtotal(self, shopping_list):
+        total_price = 0.0
+        for product, quantity in shopping_list:
+            total_price += product.calculate_price(quantity)
         return total_price
 
 
