@@ -83,6 +83,21 @@ def test_get_all_products(sample_store):
     assert len(active_products) == 2
 
 
+def test_get_active_products(sample_store):
+    """Test retrieving all active products"""
+    active_products = sample_store.get_active_products()
+
+    # All 3 products are active
+    assert len(active_products) == 3
+
+    # Deactivate one product
+    sample_store.product_list[0].deactivate()
+    active_products = sample_store.get_active_products()
+
+    # Should be only 2 products
+    assert len(active_products) == 2
+
+
 def test_order(sample_store):
     """Test ordering products from the store"""
     # Buy 2 MacBooks and 1 Bose Earbuds
@@ -113,7 +128,7 @@ def test_invalid_order(sample_store, shopping_list):
     # Add out-of-stock product to the store if needed
     # unpack tuples in shopping list, only check for product (not quantity!)
     for product, _ in shopping_list:
-        if product in sample_store.product_list:
+        if product not in sample_store.product_list:
             sample_store.add_product(product)
 
     with pytest.raises(Exception):

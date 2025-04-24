@@ -1,8 +1,6 @@
 import pytest
-
 import promotions
 from products import Product, NonStockedProduct, LimitedProduct
-from promotions import PercentDiscount, SecondHalfPrice, ThirdOneFree, Promotion
 
 
 def test_product_initialization():
@@ -127,7 +125,7 @@ def test_buy():
     assert p.quantity == 8
 
 
-@pytest.mark.parametrize("invalid_quantity", [0, 20, -1])
+@pytest.mark.parametrize("invalid_quantity", [0, 20, -1, "10"])
 def test_buy_invalid_quantity(invalid_quantity):
     """
     Test buying with invalid quantity (0, too much, negative) raises an exception.
@@ -135,6 +133,25 @@ def test_buy_invalid_quantity(invalid_quantity):
     p = Product("Monitor", price=200.0, quantity=10)
     with pytest.raises(Exception):
         p.buy(invalid_quantity)
+
+
+def test_calculate_price():
+    """
+    Test calculating price for a quantity without modifying stock.
+    """
+    p = Product("Monitor", price=200.0, quantity=10)
+    assert p.calculate_price(2) == 400.0
+    assert p.quantity == 10
+
+
+@pytest.mark.parametrize("invalid_quantity", [0, -1, "10"])
+def test_calculate_price_invalid_quantity(invalid_quantity):
+    """
+    Test buying with invalid quantity (0, too much, negative) raises an exception.
+    """
+    p = Product("Monitor", price=200.0, quantity=10)
+    with pytest.raises(Exception):
+        p.calculate_price(invalid_quantity)
 
 
 @pytest.mark.parametrize("promo_list", [

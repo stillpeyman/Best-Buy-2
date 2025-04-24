@@ -31,7 +31,7 @@ def test_percent_discount(price, quantity, percent, expected):
     (100, 4, 300.0),
     (50, 5, 200.0)
 ])
-def test_second_half_price_even_quantity(price, quantity, expected):
+def test_second_half_price_quantity(price, quantity, expected):
     """
     Test SecondHalfPrice promotion calculates total with half-price items.
     """

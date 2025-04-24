@@ -52,7 +52,7 @@ class Product:
         Setter for product price.
 
         Args:
-            value (float): The new price of the product.
+            float: The new price of the product.
 
         Raises:
             Exception: If the price is not a positive number.
@@ -66,7 +66,9 @@ class Product:
     def quantity(self):
         """
         Getter function for quantity.
-        Return the quantity (int).
+
+        Returns:
+             int: Quantity available.
         """
         return self._quantity
 
@@ -74,8 +76,13 @@ class Product:
     @quantity.setter
     def quantity(self, quantity):
         """
-        Setter function for quantity.
-        If quantity reaches 0, deactivate the product.
+        Setter for quantity.
+
+        Args:
+            int: The new quantity of the product.
+
+        Raises:
+            Exception: If the quantity is not a valid integer..
         """
         if not isinstance(quantity, int) or quantity < 0:
             raise Exception("Error, quantity must be a positive integer!")
@@ -109,14 +116,19 @@ class Product:
     @property
     def is_active(self):
         """
-        Getter function for active. Return True
-        if the product is active, otherwise False.
+        Getter function for active.
+
+        Returns:
+             bool: True if the product is active, otherwise False.
         """
         return self._is_active
 
 
     @is_active.setter
     def is_active(self, value):
+        """
+        Setter for product status.
+        """
         self._is_active = bool(value)
 
 
@@ -198,8 +210,10 @@ class Product:
 
     def promo_text(self):
         """
-        Return a string that shows the promo available.
-        Return empty string if no promo.
+        Return a formatted string showing applied promos, or empty if none.
+
+        Returns:
+             str: Promo description or empty string.
         """
         if self._promotions:
             return f" | PROMOTIONS: {', '.join([str(promo) for promo in self._promotions])}"
@@ -209,7 +223,7 @@ class Product:
 
     def __str__(self):
         """
-        Return a string that represents the product.
+        Return a user-friendly string representation of the product.
         """
         if self._promotions:
             promo_text = f" | PROMOTIONS: {', '.join([str(promo) for promo in self._promotions])}"
@@ -221,9 +235,13 @@ class Product:
 
     def buy(self, quantity):
         """
-        Buy a given quantity of the product.
-        Return total price (float) of the purchase.
-        Update the quantity of the product.
+        Buy a quantity of the product. Applies best available promotion if any.
+
+        Args:
+            quantity (int): Quantity to purchase.
+
+        Returns:
+            float: Total price after discount.
         """
         if not isinstance(quantity, int) or quantity <= 0:
             raise Exception("Error, quantity must be integer and greater than 0!")
@@ -252,8 +270,13 @@ class Product:
 
     def calculate_price(self, quantity):
         """
-        Calculate total price for a given quantity, applying promotions if available,
-        without actually buying the product or modifying its quantity.
+        Calculate price for a quantity without modifying stock.
+
+        Args:
+            quantity (int): Quantity to calculate price for.
+
+        Returns:
+            float: Total price with promotions if applicable.
         """
         if not isinstance(quantity, int) or quantity <= 0:
             raise Exception("Error, quantity must be integer and greater than 0!")
@@ -276,13 +299,13 @@ class Product:
 
     def __lt__(self, other):
         """
-        Compare this product to another product for greater-than based on price.
+        Compare this product to another product for lower-than based on price.
 
         Args:
             other (Product): The product to compare with.
 
         Returns:
-            bool: True if this product's price is greater than the other's price,
+            bool: True if this product's price is lower than the other's price,
             False otherwise.
         """
         if not isinstance(other, Product):
@@ -309,12 +332,8 @@ class Product:
 class NonStockedProduct(Product):
     def __init__(self, name, price, is_active=True):
         """
-        Get product name, price, quantity and initializes
-        a product.
-
-        Status by default is_active (availability) set to 'True'.
-
-        Quantity always set to 0 because a non-stocked product is not physical.
+        A product type that does not track stock (e.g., digital goods).
+        Always has a quantity of 0.
         """
         # Call the constructor of the parent <Product> class
         super().__init__(name, price, 0, is_active)
@@ -322,9 +341,13 @@ class NonStockedProduct(Product):
 
     def buy(self, quantity):
         """
-        Buy a given quantity of the non-stocked product.
-        Since the product doesn't track quantity, it will always return the price * quantity
-        as long as the product is active. Quantity (stock) is not limited or decreased.
+        Purchase non-stocked product. No inventory restrictions.
+
+        Args:
+            quantity (int): Quantity to purchase.
+
+        Returns:
+            float: Total price, applying best promotion if available.
         """
         if not isinstance(quantity, int) or quantity <= 0:
             raise Exception("Error, quantity must be integer and greater than 0!")
@@ -354,14 +377,13 @@ class NonStockedProduct(Product):
         else:
             promo_text = ""
 
-        return f"{self.name}, Price: {self.price}{promo_text}"
+        return f"{self.name}, Price: {self.price} (Virtual Product){promo_text}"
 
 
 class LimitedProduct(Product):
     def __init__(self, name, price, quantity, max_quantity, is_active=True):
         """
-        Get product name, price, quantity, max quantity per order and initializes
-        a product, by default is_active (availability) set to 'True'.
+        A product with a maximum purchase quantity per order.
         """
         # Call the constructor of the parent <Product> class
         super().__init__(name, price, quantity, is_active)
@@ -370,12 +392,21 @@ class LimitedProduct(Product):
 
     @property
     def max_quantity(self):
+        """
+        int: Maximum quantity allowed per order.
+        """
         return self._max_quantity
 
 
     def buy(self, quantity):
         """
-        Override <buy> to restrict the quantity that can be purchased.
+        Purchase a limited product, enforcing max quantity per order.
+
+        Args:
+            quantity (int): Quantity to purchase.
+
+        Returns:
+            float: Total price after discount.
         """
         if quantity > self._max_quantity:
             raise Exception(f"Error, you can only buy a maximum of {self._max_quantity} per order!")

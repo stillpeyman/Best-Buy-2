@@ -3,204 +3,7 @@ import promotions
 import store
 
 
-def exit_store():
-    """
-    Exit the program.
-    """
-    print("GOODBYE!")
-
-
-def make_order(store_instance):
-    """
-    This function takes care of making an order.
-    """
-    list_all_products(store_instance)
-
-    print("\nTo FINISH your order, press ENTER.")
-
-    shopping_list = []
-
-    while True:
-        available_products = []
-
-        # Pre-calculate reserved quantities for all products
-        reserved_quantities = {
-            product: sum(amount for (p, amount) in shopping_list if p == product)
-            for product in store_instance.product_list
-        }
-
-        for product in store_instance.product_list:
-            if isinstance(product, products.NonStockedProduct):
-                available_products.append(product)
-                continue
-
-            # Use pre-calculated reserved quantity
-            reserved = reserved_quantities.get(product, 0)
-            available_qty = product.quantity - reserved
-
-            if available_qty > 0:
-                available_products.append(product)
-
-        if not available_products:
-            print_framed_message("EVERYTHING IS SOLD OUT!")
-            return
-
-        print()
-        print("-" * 10)
-        for i, product in enumerate(available_products, start=1):
-            if isinstance(product, products.NonStockedProduct):
-                print(f"{i}. {product.name}, Price: {product.price}{product.promo_text()}")
-
-            elif isinstance(product, products.LimitedProduct):
-                # Use pre-calculated reserved quantity
-                reserved = reserved_quantities.get(product, 0)
-                display_qty = product.quantity - reserved
-                print(f"{i}. {product.name}, Price: {product.price}, Quantity: {display_qty} (Max per order: {product.max_quantity}){product.promo_text()}")
-
-            else:
-                # Use pre-calculated reserved quantity
-                reserved = reserved_quantities.get(product, 0)
-                display_qty = product.quantity - reserved
-                print(f"{i}. {product.name}, Price: {product.price}, Quantity: {display_qty}{product.promo_text()}")
-        print("-" * 10)
-
-        if shopping_list:
-            print(f"Your current total is {store_instance.calculate_subtotal(shopping_list)}")
-
-        user_order = input("\nEnter the product # you want to buy (or press ENTER to finish): ").strip()
-
-        if user_order == "":
-            break
-
-        if not user_order.isdigit() or not (1 <= int(user_order) <= len(available_products)):
-            print("Invalid choice. Try again.")
-            continue
-
-        product = available_products[int(user_order) - 1]
-
-        while True:
-            amount = input("Enter the quantity you want to buy (or press ENTER to finish): ").strip()
-
-            if amount == "":
-                break
-
-            if not amount.isdigit():
-                print("Please enter a valid number for the quantity.")
-                continue
-
-            amount = int(amount)
-
-            if isinstance(product, products.NonStockedProduct):
-                break
-
-            if isinstance(product, products.LimitedProduct):
-                if amount > product.max_quantity:
-                    print(f"The maximum quantity you can buy is {product.max_quantity}.")
-                    continue
-                else:
-                    break
-
-            # Use pre-calculated reserved quantity
-            reserved = reserved_quantities.get(product, 0)
-            available_qty = product.quantity - reserved
-
-
-            if amount <= 0 or amount > product.quantity:
-                print(f"Please enter an quantity between 1 and {product.quantity}.")
-                continue
-
-            else:
-                break
-
-        shopping_list.append((product, amount))
-
-    if shopping_list:
-        try:
-            total = store_instance.order(shopping_list)
-            print_framed_message(f"ORDER MADE! YOUR TOTAL {total}")
-
-            # Check for sold-out items
-            for product, _ in shopping_list:
-                if product.quantity == 0 and not isinstance(product, products.NonStockedProduct):
-                    print_framed_message(f"{product.name} is now SOLD OUT!")
-
-        except Exception as e:
-            print(f"Order failed: {e}")
-
-
-def show_total_quantity(store_instance):
-    """
-    Show the total number of items in the store.
-    """
-    print(f"\nTotal of {store_instance.get_total_quantity()} items in store.")
-
-
-def list_all_products(store_instance):
-    """
-    List of all products in the store.
-    """
-    if len(store_instance.get_all_products()) == 0:
-        print_framed_message("EVERYTHING IS SOLD OUT!")
-
-    else:
-        print("-" * 10)
-        for index, product in enumerate(store_instance.get_all_products(), start=1):
-            print(f"{index}. {product}")
-        print("-" * 10)
-
-
-def print_framed_message(message: str, pad: int = 4):
-    """
-    Print any message framed with asterisks, padded and centered.
-    """
-    lines = message.split("\n")
-    max_length = max(len(line) for line in lines)
-    width = max_length + pad * 2
-    border = "*" * (width + 2)
-
-
-    print(border)
-    for line in lines:
-        print("*" + line.center(width) + "*")
-    print(border)
-
-
-
-def execute_user_choice(store_instance):
-    """
-    Handle user input and calls corresponding function.
-    """
-    choices = {
-        "1": list_all_products,
-        "2": show_total_quantity,
-        "3": make_order,
-        "4": exit_store
-    }
-
-    while True:
-        user_choice = input("\nPlease choose a number: ").strip()
-        action = choices.get(user_choice)
-
-        if user_choice == "4":
-            exit_store()
-            break
-
-        elif action:
-            action(store_instance)
-            if len(store_instance.get_all_products()) == 0:
-                exit_store()
-                return
-
-            input("\nPress ENTER to get back to the MENU.")
-            print()
-
-        else:
-            print("Invalid choice, please try again.")
-
-        start()
-
-
-def start():
+def display_menu():
     """
     Display the store menu.
     """
@@ -252,6 +55,200 @@ def start():
     print(border)
 
 
+def start(store_instance):
+    """
+    Handle user input and calls corresponding function.
+    """
+    display_menu()
+
+    choices = {
+        "1": list_all_products,
+        "2": show_total_quantity,
+        "3": make_order,
+        "4": exit_store
+    }
+
+    while True:
+        user_choice = input("\nPlease choose a number: ").strip()
+        action = choices.get(user_choice)
+
+        if user_choice == "4":
+            exit_store()
+            break
+
+        elif action:
+            action(store_instance)
+            input("\nPress ENTER to get back to the MENU.")
+            print()
+            display_menu()
+
+        else:
+            print("Invalid choice, please try again.")
+
+
+def list_all_products(store_instance):
+    """
+    List of all products in the store.
+    """
+    if len(store_instance.get_all_products()) == 0:
+        print_framed_message("EVERYTHING IS SOLD OUT!")
+
+    else:
+        print("-" * 10)
+        for index, product in enumerate(store_instance.get_all_products(), start=1):
+            print(f"{index}. {product}")
+        print("-" * 10)
+
+
+def show_total_quantity(store_instance):
+    """
+    Show the total number of items in the store.
+    """
+    print(f"\nTotal of {store_instance.get_total_quantity()} items in store.")
+
+
+def show_available_products_for_order(store_instance, reserved_quantities):
+    """
+    Show available products for order, with their remaining quantities.
+    """
+    # init a list of tuples (available_product, quantity: available_left)
+    available_products = []
+
+    for product in store_instance.get_active_products():
+        reserved = reserved_quantities.get(product, 0)
+
+        if isinstance(product, products.NonStockedProduct):
+            # No quantity needed: Non-Stocked-Product
+            available_products.append((product, None))
+
+        elif reserved < product.quantity:
+            available_left = product.quantity - reserved
+            available_products.append((product, available_left))
+
+    if not available_products:
+        return []
+
+    print("-" * 10)
+    for i, (product, available_left) in enumerate(available_products, start=1):
+        if isinstance(product, products.NonStockedProduct):
+            print(f"{i}. {product.name}, Price: {product.price} (Virtual Product){product.promo_text()}")
+
+        elif isinstance(product, products.LimitedProduct):
+            print(
+                f"{i}. {product.name}, Price: {product.price}, Quantity: {available_left} (Max per order: {product.max_quantity}){product.promo_text()}")
+
+        else:
+            print(f"{i}. {product.name}, Price: {product.price}, Quantity: {available_left}{product.promo_text()}")
+    print("-" * 10)
+
+    # Return list of only products because in make_order() user will choose from this list by index number
+    return [product for product, _ in available_products]
+
+
+def make_order(store_instance):
+    """
+    This function takes care of making an order.
+    """
+    shopping_list = []
+    reserved_quantities = {}
+
+    print("\nTo FINISH your order, press ENTER.")
+    print("To CANCEL your order, enter 'q'.")
+
+    while True:
+        # Create a list of available products and show available products before each selection
+        available_products = show_available_products_for_order(store_instance, reserved_quantities)
+
+        if not available_products:
+            print_framed_message("EVERYTHING IS SOLD OUT!")
+            break
+
+        user_order = input("\nEnter the product # you want: ").strip()
+
+        if user_order == "":
+            break
+
+        if user_order.lower().strip() == "q":
+            print("ORDER CANCELLED.")
+            return
+
+        if not user_order.isdigit() or not (1 <= int(user_order) <= len(available_products)):
+            print("Invalid choice. Try again.")
+            continue
+
+        product_nr = int(user_order) - 1
+        product = available_products[product_nr]
+
+        while True:
+            amount = input("Enter the amount you want: ").strip()
+
+            if amount == "":
+                break
+
+            if amount.lower().strip() == "q":
+                print("ORDER CANCELLED.")
+                return
+
+            if not amount.isdigit():
+                print("Please enter a valid number for the amount.")
+                continue
+
+            amount = int(amount)
+
+            if isinstance(product, products.NonStockedProduct):
+                break
+
+            if isinstance(product, products.LimitedProduct):
+                if amount > product.max_quantity:
+                    print(f"The maximum quantity you can buy is {product.max_quantity}.")
+                    continue
+
+            # Check quantity of reserved product (whilst shopping) to check how much available to order
+            reserved = reserved_quantities.get(product, 0)
+            available_to_order = product.quantity - reserved
+            if amount <= 0 or amount > available_to_order:
+                print(f"Please enter an amount between 1 and {available_to_order}.")
+                continue
+
+            break
+
+        # Update reserved quantities and add to shopping list
+        reserved_quantities[product] = reserved + amount
+        shopping_list.append((product, amount))
+
+        print(f"Your current total is {store_instance.calculate_subtotal(shopping_list)}")
+
+        # Check if product now sold out (based on reserved)
+        if reserved_quantities.get(product, 0) == product.quantity:
+            print_framed_message(f"{product.name} is now SOLD OUT!")
+
+    if shopping_list:
+        print_framed_message(f"Order made! Total payment {store_instance.order(shopping_list)}")
+
+
+def print_framed_message(message: str, pad: int = 4):
+    """
+    Print any message framed with asterisks, padded and centered.
+    """
+    lines = message.split("\n")
+    max_length = max(len(line) for line in lines)
+    width = max_length + pad * 2
+    border = "*" * (width + 2)
+
+
+    print(border)
+    for line in lines:
+        print("*" + line.center(width) + "*")
+    print(border)
+
+
+def exit_store():
+    """
+    Exit the program.
+    """
+    print("GOODBYE!")
+
+
 def main():
     """Main function starts the program"""
     # setup initial stock of inventory
@@ -275,8 +272,7 @@ def main():
 
     # create Store instance
     best_buy = store.Store(product_list)
-    start()
-    execute_user_choice(best_buy)
+    start(best_buy)
 
 
 if __name__ == "__main__":

@@ -5,7 +5,13 @@ class Store:
 
     def __init__(self, product_list):
         """
-        Get a list of products and initializes the store.
+        Initialize the store with a list of products.
+
+        Args:
+            product_list (list): A non-empty list of Product instances.
+
+        Raises:
+            Exception: If the product_list is not a list or is empty.
         """
         if not isinstance(product_list, list) or not product_list:
             raise Exception("product_list must be a non-empty list!")
@@ -14,7 +20,10 @@ class Store:
 
     def add_product(self, product: Product):
         """
-        Add a product to the store provided product is class Product.
+        Add a product to the store.
+
+        Args:
+            product (Product): The product to be added.
         """
         if not isinstance(product, Product):
             raise Exception("Only instances of Product can be added!")
@@ -23,7 +32,10 @@ class Store:
 
     def remove_product(self, product: Product):
         """
-        Remove a product (Product class) from store.
+        Remove a product from the store.
+
+        Args:
+            product (Product): The product to be removed.
         """
         if product in self.product_list:
             self.product_list.remove(product)
@@ -33,29 +45,47 @@ class Store:
 
     def get_total_quantity(self):
         """
-        Return how many items are in the store in total.
+        Get the total quantity of all products in the store.
+
+        Returns:
+            int: The total number of items across all products.
         """
         return sum(product.quantity for product in self.product_list)
 
 
     def get_all_products(self):
         """
-        Return a list of all active products in the store as strings.
+        Get a list of all active products as strings.
+
+        Returns:
+            list of str: A list of string representations of active products.
         """
         return [str(product) for product in self.product_list if product.is_active]
 
 
     def get_active_products(self):
         """
-        Return list of active products in the store as objects.
+        Get a list of all active product objects in the store.
+
+        Returns:
+            list of Product: All active Product instances.
         """
         return [product for product in self.product_list if product.is_active]
 
 
     def order(self, shopping_list):
         """
-        Get a list of tuples, each tuple has 2 items (product: Product, quantity),
-        buys the product and returns total price of the order.
+        Process an order and return the total price.
+
+        Args:
+            shopping_list (list of tuples): Each tuple contains a Product instance
+                                            and a quantity to purchase (int).
+
+        Returns:
+            float: The total price of the order.
+
+        Raises:
+            Exception: If the product cannot be bought (e.g., not enough stock).
         """
         total_price = 0.0
         for product, quantity in shopping_list:
@@ -64,10 +94,19 @@ class Store:
 
 
     def calculate_subtotal(self, shopping_list):
-        total_price = 0.0
+        """
+        Calculate the sub-total of a current order.
+
+        Args:
+            shopping_list (list): List of tuples (product: Product, quantity: int).
+
+        Returns:
+            float: Sub-total of a current order.
+        """
+        sub_total = 0.0
         for product, quantity in shopping_list:
-            total_price += product.calculate_price(quantity)
-        return total_price
+            sub_total += product.calculate_price(quantity)
+        return sub_total
 
 
     def __contains__(self, product):
@@ -87,6 +126,15 @@ class Store:
 
 
     def __add__(self, other):
+        """
+        Combine two Store instances into a new Store containing all products from both.
+
+        Args:
+            other (Store): Another Store instance to be combined.
+
+        Returns:
+            Store: A new Store instance containing all products from both stores.
+        """
         if not isinstance(other, Store):
             raise Exception(f"{other} must be Store instance.")
         combined_products = self.product_list + other.product_list
