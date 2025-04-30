@@ -158,6 +158,7 @@ def make_order(store_instance):
     while True:
         # Create a list of available products and show available products before each selection
         available_products = show_available_products_for_order(store_instance, reserved_quantities)
+        print(available_products)
 
         if not available_products:
             print_framed_message("EVERYTHING IS SOLD OUT!")
@@ -210,11 +211,13 @@ def make_order(store_instance):
                 print(f"Please enter an amount between 1 and {available_to_order}.")
                 continue
 
+            # Update reserved quantities and add to shopping list
+            reserved_quantities[product] = reserved + amount
             break
 
-        # Update reserved quantities and add to shopping list
-        if not isinstance(product, products.NonStockedProduct):
-            reserved_quantities[product] = reserved + amount
+        # # Update reserved quantities and add to shopping list
+        # if not isinstance(product, products.NonStockedProduct):
+        #     reserved_quantities[product] = reserved + amount
 
         shopping_list.append((product, amount))
 
