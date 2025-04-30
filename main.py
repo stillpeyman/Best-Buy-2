@@ -213,14 +213,17 @@ def make_order(store_instance):
             break
 
         # Update reserved quantities and add to shopping list
-        reserved_quantities[product] = reserved + amount
+        if not isinstance(product, products.NonStockedProduct):
+            reserved_quantities[product] = reserved + amount
+
         shopping_list.append((product, amount))
 
         print(f"Your current total is {store_instance.calculate_subtotal(shopping_list)}")
 
         # Check if product now sold out (based on reserved)
-        if reserved_quantities.get(product, 0) == product.quantity:
-            print_framed_message(f"{product.name} is now SOLD OUT!")
+        if not isinstance(product, products.NonStockedProduct):
+            if reserved_quantities.get(product, 0) == product.quantity:
+                print_framed_message(f"{product.name} is now SOLD OUT!")
 
     if shopping_list:
         print_framed_message(f"Order made! Total payment {store_instance.order(shopping_list)}")
