@@ -7,12 +7,12 @@ def test_product_initialization():
     """
     Test proper initialization of a standard Product.
     """
-    p = Product("Laptop", price=1200.50, quantity=10, promotions=None)
+    p = Product("Laptop", price=1200.50, quantity=10, promotion=None)
     assert p.name == "Laptop"
     assert p.price == 1200.50
     assert p.quantity == 10
     assert p.is_active is True
-    assert p.promo == []
+    assert p.promo is None
 
 
 @pytest.mark.parametrize(
@@ -28,7 +28,7 @@ def test_invalid_initialization(name, price, quantity):
     Test that invalid name, price, or quantity raises an exception.
     """
     with pytest.raises(Exception):
-        Product(name, price, quantity, promotions=None)
+        Product(name, price, quantity, promotion=None)
 
 
 def test_price_getter():
@@ -88,7 +88,7 @@ def test_set_quantity_invalid(invalid_quantity):
     """
     p = Product("Tablet", price=300.0, quantity=5)
     with pytest.raises(Exception):
-        p.quantity(invalid_quantity)
+        p.quantity = invalid_quantity
 
 
 def test_update_quantity():
@@ -154,40 +154,27 @@ def test_calculate_price_invalid_quantity(invalid_quantity):
         p.calculate_price(invalid_quantity)
 
 
-@pytest.mark.parametrize("promo_list", [
-    [promotions.SecondHalfPrice("Second Half Price"),
-     promotions.ThirdOneFree("Third One Free"),
-     promotions.PercentDiscount("30% off", 30)]
-])
-def test_add_promo(promo_list):
+def test_add_promo():
     """
-    Test adding multiple promotions to a product.
+    Test adding a promotion to a product.
     """
     p = Product("Monitor", price=200.0, quantity=10)
-    p.add_promo(promo_list)
-
-    # check that all promos are added
-    assert all(promo in p.promo for promo in promo_list)
-    assert len(p.promo) == len(promo_list)
+    promo = promotions.SecondHalfPrice("Second Half Price")
+    p.add_promo(promo)
+    assert p.promo == promo
 
 
-@pytest.mark.parametrize("promo_list", [
-    [promotions.SecondHalfPrice("Second Half Price"),
-     promotions.ThirdOneFree("Third One Free"),
-     promotions.PercentDiscount("30% off", 30)]
-])
-def test_remove_promo(promo_list):
+def test_remove_promo():
     """
     Test removing a specific promotion from the product.
     """
     p = Product("Monitor", price=200.0, quantity=10)
-    p.add_promo(promo_list)
+    promo = promotions.PercentDiscount("30% off", 30)
+    p.add_promo(promo)
 
-    # remove one promo
-    p.remove_promo(promo_list[1])
-
-    assert promo_list[1] not in p.promo
-    assert len(p.promo) == len(promo_list) - 1
+    # remove promo
+    p.remove_promo()
+    assert p.promo is None
 
 
 def test_status():

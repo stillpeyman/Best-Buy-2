@@ -131,7 +131,8 @@ def show_available_products_for_order(store_instance, reserved_quantities):
     print("-" * 10)
     for i, (product, available_left) in enumerate(available_products, start=1):
         if isinstance(product, products.NonStockedProduct):
-            print(f"{i}. {product.name}, Price: {product.price} (Virtual Product){product.promo_text()}")
+            # print(f"{i}. {product.name}, Price: {product.price} (Virtual Product){product.promo_text()}")
+            print(f"{i} {product}")
 
         elif isinstance(product, products.LimitedProduct):
             print(
@@ -158,7 +159,6 @@ def make_order(store_instance):
     while True:
         # Create a list of available products and show available products before each selection
         available_products = show_available_products_for_order(store_instance, reserved_quantities)
-        print(available_products)
 
         if not available_products:
             print_framed_message("EVERYTHING IS SOLD OUT!")
@@ -215,10 +215,6 @@ def make_order(store_instance):
             reserved_quantities[product] = reserved + amount
             break
 
-        # # Update reserved quantities and add to shopping list
-        # if not isinstance(product, products.NonStockedProduct):
-        #     reserved_quantities[product] = reserved + amount
-
         shopping_list.append((product, amount))
 
         print(f"Your current total is {store_instance.calculate_subtotal(shopping_list)}")
@@ -272,7 +268,7 @@ def main():
     thirty_percent = promotions.PercentDiscount("30% off!", percent=30)
 
     # Add promotions to products
-    product_list[0].add_promo([second_half_price, third_one_free, thirty_percent])
+    product_list[0].add_promo(second_half_price)
     product_list[1].add_promo(third_one_free)
     product_list[3].add_promo(thirty_percent)
 

@@ -3,7 +3,7 @@ from promotions import Promotion
 
 class Product:
 
-    def __init__(self, name, price, quantity, is_active=True, promotions=None):
+    def __init__(self, name, price, quantity, is_active=True, promotion=None):
         """
         A class representing a product.
 
@@ -12,7 +12,7 @@ class Product:
             price (float): The price per unit.
             quantity (int): The available quantity in stock.
             is_active (bool): Whether the product is active/available for purchase.
-            promotions (list): List of promotion instances applied to this product.
+            promotion (Promotion): Promotion instance applied to this product.
         """
         if not isinstance(name, str) or not name:
             raise Exception("Error, name must be a non-empty string!")
@@ -23,17 +23,14 @@ class Product:
         if not isinstance(quantity, int) or quantity < 0:
             raise Exception("Error, quantity must be a positive integer!")
 
-        if promotions:
-            for promotion in promotions:
-                if not isinstance(promotion, Promotion):
-                    raise Exception("Only instance of Promotion can be used.")
+        if promotion is not None and not isinstance(promotion, Promotion):
+            raise Exception("Only instance of Promotion can be used.")
 
         self.name = name
         self.price = float(price)
         self._quantity = quantity
         self._is_active = is_active
-        self._promotions = promotions if promotions is not None else []
-
+        self._promotion = promotion
 
     @property
     def price(self):
@@ -44,7 +41,6 @@ class Product:
             float: The price of the product.
         """
         return self._price
-
 
     @price.setter
     def price(self, value):
@@ -61,7 +57,6 @@ class Product:
             raise Exception("Error, price must be float and greater than 0!")
         self._price = float(value)
 
-
     @property
     def quantity(self):
         """
@@ -71,7 +66,6 @@ class Product:
              int: Quantity available.
         """
         return self._quantity
-
 
     @quantity.setter
     def quantity(self, quantity):
@@ -92,7 +86,6 @@ class Product:
         if self._quantity == 0:
             self._is_active = False
 
-
     def update_quantity(self, quantity):
         """
         Update the quantity after a purchase.
@@ -112,7 +105,6 @@ class Product:
         if self._quantity == 0:
             self._is_active = False
 
-
     @property
     def is_active(self):
         """
@@ -123,7 +115,6 @@ class Product:
         """
         return self._is_active
 
-
     @is_active.setter
     def is_active(self, value):
         """
@@ -131,13 +122,11 @@ class Product:
         """
         self._is_active = bool(value)
 
-
     def activate(self):
         """
         Activate the product.
         """
         self._is_active = True
-
 
     def deactivate(self):
         """
@@ -145,93 +134,59 @@ class Product:
         """
         self._is_active = False
 
-
     def add_promo(self, promotion):
         """
-        Adds one or more promotions to the product's promotion list.
-
-        If a single promotion is passed, it is added to the list if not already present.
-        If a list of promotions is passed, each promotion is checked and added individually
-        if not already in the list.
+        Add one promotion to a product.
 
         Args:
-            promotion (Promotion or list): A single Promotion object or a list of Promotion objects
+            promotion (Promotion): A single Promotion object
         """
-        if isinstance(promotion, list):
-            for promo in promotion:
-                if isinstance(promo, Promotion) and promo not in self._promotions:
-                    self._promotions.append(promo)
+        if isinstance(promotion, Promotion):
+            self._promotion = promotion
 
-        elif isinstance(promotion, Promotion):
-            if promotion not in self._promotions:
-                self._promotions.append(promotion)
+        else:
+            raise Exception("Only instance of Promotion can be applied.")
 
-
-    def remove_promo(self, promotion):
+    def remove_promo(self):
         """
-        Removes one or more promotions from the product's promotion list.
-
-        If a single promotion is passed, it is removed from the list if it exists.
-        If a list of promotions is passed, each promotion is checked and removed individually
-        if it exists in the list.
-
-        Args:
-            promotion (Promotion or list): A single Promotion object or a list of Promotion objects
+        Remove promotion from a product.
         """
-        if isinstance(promotion, list):
-            for promo in promotion:
-                if isinstance(promo, Promotion) and promo in self._promotions:
-                    self._promotions.remove(promo)
-
-        elif isinstance(promotion, Promotion):
-            if promotion in self._promotions:
-                self._promotions.remove(promotion)
-
+        self._promotion = None
 
     @property
     def promo(self):
         """
         Getter for promo.
         """
-        return self._promotions
-
+        return self._promotion
 
     @promo.setter
-    def promo(self, promotions):
+    def promo(self, promotion):
         """
         Setter for promo.
         """
-        if not isinstance(promotions, list):
-            # If a single promo is passed, make it a list
-            promotions = [promotions]
+        if isinstance(promotion, Promotion):
+            self._promotion = promotion
 
-        self._promotions = promotions
-
+        else:
+            raise Exception("Only instance of Promotion can be applied.")
 
     def promo_text(self):
         """
-        Return a formatted string showing applied promos, or empty if none.
+        Return a formatted string showing applied promo, or empty if none.
 
         Returns:
              str: Promo description or empty string.
         """
-        if self._promotions:
-            return f" | PROMOTIONS: {', '.join([str(promo) for promo in self._promotions])}"
-        else:
-            return ""
-
+        return f" | PROMOTION: {self._promotion.name}" if self._promotion else ""
 
     def __str__(self):
         """
         Return a user-friendly string representation of the product.
         """
-        if self._promotions:
-            promo_text = f" | PROMOTIONS: {', '.join([str(promo) for promo in self._promotions])}"
-        else:
-            promo_text = ""
+        promo_text = f" | PROMOTION: {self._promotion.name}" if self._promotion else ""
 
         return f"{self.name}, Price: {self.price}, Quantity: {self.quantity}{promo_text}"
-
 
     def buy(self, quantity):
         """
@@ -254,19 +209,14 @@ class Product:
 
         total_price = self.price * quantity
 
-        # Apply promo(s) if available, get <best_price> if multiple promos
-        if self._promotions:
-            best_price = min(
-                [promo.apply_promotion(self, quantity) for promo in self._promotions],
-                default=total_price
-            )
-
+        # Apply promo if available, get <best_price> if multiple promos
+        if self._promotion:
+            promo_price = self._promotion.apply_promotion(self, quantity)
             self.update_quantity(quantity)
-            return round(best_price, 2)
+            return round(promo_price, 2)
 
         self.update_quantity(quantity)
         return total_price
-
 
     def calculate_price(self, quantity):
         """
@@ -287,15 +237,11 @@ class Product:
         total_price = self.price * quantity
 
         # Apply promo(s) if available, get <best_price> if multiple promos
-        if self._promotions:
-            best_price = min(
-                [promo.apply_promotion(self, quantity) for promo in self._promotions],
-                default=total_price
-            )
-            return round(best_price, 2)
+        if self._promotion:
+            promo_price = self._promotion.apply_promotion(self, quantity)
+            return round(promo_price, 2)
 
         return total_price
-
 
     def __lt__(self, other):
         """
@@ -311,7 +257,6 @@ class Product:
         if not isinstance(other, Product):
             raise Exception(f"{other} must be a Product instance!")
         return self.price < other.price
-
 
     def __gt__(self, other):
         """
@@ -338,7 +283,6 @@ class NonStockedProduct(Product):
         # Call the constructor of the parent <Product> class
         super().__init__(name, price, 0, is_active)
 
-
     def buy(self, quantity):
         """
         Purchase non-stocked product. No inventory restrictions.
@@ -347,7 +291,7 @@ class NonStockedProduct(Product):
             quantity (int): Quantity to purchase.
 
         Returns:
-            float: Total price, applying best promotion if available.
+            float: Total price, applying promotion if available.
         """
         if not isinstance(quantity, int) or quantity <= 0:
             raise Exception("Error, quantity must be integer and greater than 0!")
@@ -357,25 +301,18 @@ class NonStockedProduct(Product):
 
         total_price = self.price * quantity
 
-        # Apply promo(s) if available, get <best_price> if multiple promos
-        if self._promotions:
-            best_price = min(
-                [promo.apply_promotion(self, quantity) for promo in self._promotions],
-                default=total_price
-            )
-            return round(best_price, 2)
+        # Apply promo if available, get <best_price> if multiple promos
+        if self._promotion:
+            promo_price = self._promotion.apply_promotion(self, quantity)
+            return round(promo_price, 2)
 
         return total_price
-
 
     def __str__(self):
         """
         Override <show> to display that it is a non-stocked product.
         """
-        if self._promotions:
-            promo_text = f" | PROMOTIONS: {', '.join([str(promo) for promo in self._promotions])}"
-        else:
-            promo_text = ""
+        promo_text = f" | PROMOTIONS: {self._promotion.name}" if self._promotion else ""
 
         return f"{self.name}, Price: {self.price} (Virtual Product){promo_text}"
 
@@ -389,14 +326,12 @@ class LimitedProduct(Product):
         super().__init__(name, price, quantity, is_active)
         self._max_quantity = max_quantity
 
-
     @property
     def max_quantity(self):
         """
         int: Maximum quantity allowed per order.
         """
         return self._max_quantity
-
 
     def buy(self, quantity):
         """
@@ -412,7 +347,6 @@ class LimitedProduct(Product):
             raise Exception(f"Error, you can only buy a maximum of {self._max_quantity} per order!")
 
         return super().buy(quantity)
-
 
     def __str__(self):
         """

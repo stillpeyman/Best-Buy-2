@@ -17,7 +17,6 @@ class Store:
             raise Exception("product_list must be a non-empty list!")
         self.product_list = product_list
 
-
     def add_product(self, product: Product):
         """
         Add a product to the store.
@@ -28,7 +27,6 @@ class Store:
         if not isinstance(product, Product):
             raise Exception("Only instances of Product can be added!")
         self.product_list.append(product)
-
 
     def remove_product(self, product: Product):
         """
@@ -42,7 +40,6 @@ class Store:
         else:
             raise Exception("Product not found in store!")
 
-
     def get_total_quantity(self):
         """
         Get the total quantity of all products in the store.
@@ -51,7 +48,6 @@ class Store:
             int: The total number of items across all products.
         """
         return sum(product.quantity for product in self.product_list)
-
 
     def get_all_products(self):
         """
@@ -62,7 +58,6 @@ class Store:
         """
         return [str(product) for product in self.product_list if product.is_active]
 
-
     def get_active_products(self):
         """
         Get a list of all active product objects in the store.
@@ -71,7 +66,6 @@ class Store:
             list of Product: All active Product instances.
         """
         return [product for product in self.product_list if product.is_active]
-
 
     def order(self, shopping_list):
         """
@@ -92,7 +86,6 @@ class Store:
             total_price += product.buy(quantity)
         return total_price
 
-
     def calculate_subtotal(self, shopping_list):
         """
         Calculate the sub-total of a current order.
@@ -108,7 +101,6 @@ class Store:
             sub_total += product.calculate_price(quantity)
         return sub_total
 
-
     def __contains__(self, product):
         """
         Check if a product is in the store.
@@ -123,7 +115,6 @@ class Store:
             raise False
 
         return product in self.product_list
-
 
     def __add__(self, other):
         """

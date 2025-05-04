@@ -17,7 +17,6 @@ class Promotion(ABC):
         """
         self.name = name
 
-
     @abstractmethod
     def apply_promotion(self, product, quantity) -> float:
         """
@@ -31,7 +30,6 @@ class Promotion(ABC):
             float: Total price after applying the promotion.
         """
         pass
-
 
     def __str__(self):
         """
@@ -57,7 +55,6 @@ class PercentDiscount(Promotion):
         """
         super().__init__(name)
         self.percent = percent
-
 
     def apply_promotion(self, product, quantity) -> float:
         """
