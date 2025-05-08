@@ -111,7 +111,7 @@ def show_available_products_for_order(store_instance, reserved_quantities):
     """
     Show available products for order, with their remaining quantities.
     """
-    # init a list of tuples (available_product, quantity: available_left)
+    # Init a list of tuples (available_product, quantity: available_left)
     available_products = []
 
     for product in store_instance.get_active_products():
@@ -150,7 +150,6 @@ def make_order(store_instance):
     """
     This function takes care of making an order.
     """
-    shopping_list = []
     reserved_quantities = {}
 
     print("\nTo FINISH your order, press ENTER.")
@@ -159,6 +158,7 @@ def make_order(store_instance):
     while True:
         # Create a list of available products and show available products before each selection
         available_products = show_available_products_for_order(store_instance, reserved_quantities)
+        # print(available_products)
 
         if not available_products:
             print_framed_message("EVERYTHING IS SOLD OUT!")
@@ -166,7 +166,7 @@ def make_order(store_instance):
 
         user_order = input("\nEnter the product # you want: ").strip()
 
-        if user_order == "":
+        if user_order == "".strip():
             break
 
         if user_order.lower().strip() == "q":
@@ -183,7 +183,7 @@ def make_order(store_instance):
         while True:
             amount = input("Enter the amount you want: ").strip()
 
-            if amount == "":
+            if amount == "".strip():
                 break
 
             if amount.lower().strip() == "q":
@@ -215,16 +215,20 @@ def make_order(store_instance):
             reserved_quantities[product] = reserved + amount
             break
 
-        shopping_list.append((product, amount))
-
-        print(f"Your current total is {store_instance.calculate_subtotal(shopping_list)}")
+        current_total = 0
+        # print(f"RESERVED: {reserved_quantities}")
+        for product, qty in reserved_quantities.items():
+            current_total += product.calculate_price(qty)
+        print(f"Your current total is {current_total}")
 
         # Check if product now sold out (based on reserved)
         if not isinstance(product, products.NonStockedProduct):
             if reserved_quantities.get(product, 0) == product.quantity:
                 print_framed_message(f"{product.name} is now SOLD OUT!")
 
-    if shopping_list:
+    if reserved_quantities:
+        shopping_list = list(reserved_quantities.items())
+        # print(f"SHOPPING LIST: {shopping_list}")
         print_framed_message(f"Order made! Total payment {store_instance.order(shopping_list)}")
 
 
