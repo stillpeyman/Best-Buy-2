@@ -86,21 +86,6 @@ class Store:
             total_price += product.buy(quantity)
         return total_price
 
-    def calculate_subtotal(self, shopping_list):
-        """
-        Calculate the sub-total of a current order.
-
-        Args:
-            shopping_list (list): List of tuples (product: Product, quantity: int).
-
-        Returns:
-            float: Sub-total of a current order.
-        """
-        sub_total = 0.0
-        for product, quantity in shopping_list:
-            sub_total += product.calculate_price(quantity)
-        return sub_total
-
     def __contains__(self, product):
         """
         Check if a product is in the store.

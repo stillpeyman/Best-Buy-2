@@ -196,20 +196,19 @@ def make_order(store_instance):
 
             amount = int(amount)
 
-            if isinstance(product, products.NonStockedProduct):
-                break
-
             if isinstance(product, products.LimitedProduct):
                 if amount > product.max_quantity:
                     print(f"The maximum quantity you can buy is {product.max_quantity}.")
                     continue
 
-            # Check quantity of reserved product (whilst shopping) to check how much available to order
+            # Get quantity of reserved product and store in variable 'reserved'
             reserved = reserved_quantities.get(product, 0)
-            available_to_order = product.quantity - reserved
-            if amount <= 0 or amount > available_to_order:
-                print(f"Please enter an amount between 1 and {available_to_order}.")
-                continue
+            if not isinstance(product, products.NonStockedProduct):
+                # Check how much available to order based on reserved products
+                available_to_order = product.quantity - reserved
+                if amount <= 0 or amount > available_to_order:
+                    print(f"Please enter an amount between 1 and {available_to_order}.")
+                    continue
 
             # Update reserved quantities and add to shopping list
             reserved_quantities[product] = reserved + amount
