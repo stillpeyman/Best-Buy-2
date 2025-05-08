@@ -109,9 +109,9 @@ def show_total_quantity(store_instance):
 
 def show_available_products_for_order(store_instance, reserved_quantities):
     """
-    Show available products for order, with their remaining quantities.
+    Show available products with their remaining quantities.
     """
-    # Init a list of tuples (available_product, quantity: available_left)
+    # Init a list of tuples (available_product, quantity_available)
     available_products = []
 
     for product in store_instance.get_active_products():
@@ -122,24 +122,27 @@ def show_available_products_for_order(store_instance, reserved_quantities):
             available_products.append((product, None))
 
         elif reserved < product.quantity:
-            available_left = product.quantity - reserved
-            available_products.append((product, available_left))
+            qty_available = product.quantity - reserved
+            available_products.append((product, qty_available))
 
     if not available_products:
         return []
 
     print("-" * 10)
-    for i, (product, available_left) in enumerate(available_products, start=1):
+    for i, (product, qty_available) in enumerate(available_products, start=1):
         if isinstance(product, products.NonStockedProduct):
-            # print(f"{i}. {product.name}, Price: {product.price} (Virtual Product){product.promo_text()}")
+            # <print(product)> calls <str(product)> of class NonStockedProduct(Product) (see: products.py)
             print(f"{i} {product}")
 
         elif isinstance(product, products.LimitedProduct):
             print(
-                f"{i}. {product.name}, Price: {product.price}, Quantity: {available_left} (Max per order: {product.max_quantity}){product.promo_text()}")
+                f"{i}. {product.name}, Price: {product.price}, "
+                f"Quantity: {qty_available} (Max per order: {product.max_quantity})"
+                f"{product.promo_text()}"
+            )
 
         else:
-            print(f"{i}. {product.name}, Price: {product.price}, Quantity: {available_left}{product.promo_text()}")
+            print(f"{i}. {product.name}, Price: {product.price}, Quantity: {qty_available}{product.promo_text()}")
     print("-" * 10)
 
     # Return list of only products because in make_order() user will choose from this list by index number
@@ -158,7 +161,6 @@ def make_order(store_instance):
     while True:
         # Create a list of available products and show available products before each selection
         available_products = show_available_products_for_order(store_instance, reserved_quantities)
-        # print(available_products)
 
         if not available_products:
             print_framed_message("EVERYTHING IS SOLD OUT!")
